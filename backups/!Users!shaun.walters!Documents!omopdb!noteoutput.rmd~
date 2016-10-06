@@ -1,0 +1,122 @@
+---
+title: "Note output V1"
+date: "September 29, 2016"
+output: html_document
+---
+
+```{r, echo=FALSE}
+options(warn=-1)
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
+
+
+```
+
+```{r}
+library(RPostgreSQL)
+library(xtable)
+
+xtable <- function(x, ...) {
+   for (i in which(sapply(x, function(y) !all(is.na(match(c("POSIXt","Date"),class(y))))))) x[[i]] <- as.character(x[[i]])
+   xtable::xtable(x, ...)
+}
+
+drv <- dbDriver('PostgreSQL')
+con <- dbConnect(drv,
+                 dbname='omopone',
+                 host='localhost',
+                 port=5432,
+                 user='shaun.walters')
+```
+
+
+```{r, results='asis'}
+
+for(p in as.character(10000:10004)){
+
+    person <- paste0(
+        '
+        select
+        p.person_id,
+        gender_concept_id,
+        c1.concept_name,
+        c1.concept_class_id,
+        race_concept_id,
+        c2.concept_name,
+        c2.concept_class_id,
+        ethnicity_concept_id,
+        c3.concept_name,
+        c3.concept_class_id
+        from person p
+        inner join concept c1
+        on p.gender_concept_id=c1.concept_id
+        inner join concept c2
+        on p.race_concept_id=c2.concept_id
+        inner join concept c3
+        on p.ethnicity_concept_id=c3.concept_id
+        where person_id = ',
+        p,
+        ';')
+
+    condition <- paste0(
+        '
+select
+condition_concept_id,
+c1.concept_name,
+c1.concept_class_id,
+condition_start_date,
+condition_end_date
+from condition_occurrence c
+inner join concept c1
+on c.condition_concept_id = c1.concept_id
+where person_id = ',
+p,
+'
+ order by condition_start_date;')
+
+    drug <- paste0(
+        '
+select
+drug_concept_id,
+c1.concept_name,
+c1.concept_class_id,
+drug_exposure_start_date,
+drug_exposure_end_date,
+stop_reason
+from drug_exposure c
+inner join concept c1
+on c.drug_concept_id = c1.concept_id
+where person_id = ',
+p,
+' order by drug_exposure_start_date;')
+
+    procedure <- paste0(
+        '
+select
+procedure_concept_id,
+c1.concept_name,
+c1.concept_class_id,
+procedure_date
+from procedure_occurrence c
+inner join concept c1
+on c.procedure_concept_id = c1.concept_id
+where person_id = ',
+p,
+' order by procedure_date;')
+
+    queryp <- dbGetQuery(con,
+                        person)
+    queryc <- dbGetQuery(con,
+                        condition)
+    queryd <- dbGetQuery(con,
+                        drug)
+    querypr <- dbGetQuery(con,
+                          procedure)
+    cat(paste0('<h3>',p,'</h3>'))
+    print(xtable(queryp), type='html')
+    print(xtable(queryc), type='html')
+    print(xtable(queryd), type='html')
+    print(xtable(querypr), type='html')
+}
+```
+
+

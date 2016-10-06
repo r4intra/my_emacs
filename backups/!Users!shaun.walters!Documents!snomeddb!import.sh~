@@ -1,0 +1,3 @@
+neo4j-import     --into snomedone.db --id-type integer \
+                 --nodes:Concept nodes.csv  \
+                 --relationships edges.csv

@@ -1,0 +1,25 @@
+with attr as (select distinct typeid from relationship),
+--remove attributes from concepts and add fully specified name
+concept_noattr as (select concept.id,
+                          concept.effectivetime,
+                          concept.moduleid,
+                          description.term
+				   from concept
+				   inner join description
+				   on concept.id=description.conceptid
+				   where concept.id not in (select typeid from attr)
+				   and typeid = 900000000000003001
+				   and concept.active=1),
+
+--mutate descriptions into concepts
+concept_desc as (select min(id) as id,
+                        min(effectivetime) as effectivetime,
+                        min(moduleid) as moduleid,
+                        term
+                        from description
+                        where active = 1
+                        group by term)
+
+select * from concept_noattr
+union
+select * from concept_desc

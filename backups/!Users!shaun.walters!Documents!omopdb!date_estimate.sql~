@@ -1,0 +1,12 @@
+/* Add column to tables */
+
+alter table condition_occurrence
+      add column date_estimate integer;
+
+alter table drug_exposure
+      add column date_estimate integer;
+
+alter table procedure_occurrence
+      add column date_estimate integer;
+
+

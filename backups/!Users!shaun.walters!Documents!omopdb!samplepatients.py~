@@ -1,0 +1,7 @@
+import psycopg2
+
+conn = psycopg2.connect('dbname=omopone user=shaun.walters')
+
+cur = conn.cursor()
+
+cur.execute('select * from person where person_id = 10000')
